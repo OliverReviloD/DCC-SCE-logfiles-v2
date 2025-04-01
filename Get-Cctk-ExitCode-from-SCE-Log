@@ -1,0 +1,43 @@
+#####################################################################
+#####################################################################
+# Very basic :   grab only  "Vendor Software Return Code:...."  = 'CCTK-ExitCode' from SCE Log file 
+#
+#               [Mon Mar 24 15:50:33 2025]	Vendor Software Return Code: 146
+#
+#               Return ExitCode of CCTK.Exe 
+#####################################################################
+#####################################################################
+#
+# 1) Run SCE-CCTK-Exe with dedicated log file paramter
+#      <SCEExeFilePath> /l=<SCELogFilePath>
+# 2) powershell.exe -ExecutionPolicy ByPass -file "<ThisScript-Get-Cctk-ExitCode-from-SCE-Log>.PS1" -SceLogFilePath <SCELogFilePath>
+#
+
+# --------------------------------------------
+# --------------------------------------------
+#    PS1 source code   = <ThisScript--Get-Cctk-ExitCode-from-SCE-Log>
+# --------------------------------------------
+# --------------------------------------------
+[cmdletbinding()]
+    param ( [Parameter(Mandatory = $True)][string]$SceLogFilePath)
+
+# Searchstrings in log file 
+$VendorReturnFailure = "Vendor Software Return Code: 146"        # example:  import of INI failed
+$VendorReturnSuccess = "Vendor Software Return Code: 0"          # example:  Success
+
+Write-Host "searching for '$VendorReturnSuccess'"
+$VendorReturn = Get-Content $SceLogFilePath  | Select-String $VendorReturnSuccess  | Select-Object
+if ( $VendorReturn -ne $Null ) {
+    Write-output "SCE succeeded"
+    exit 0
+    }
+
+Write-Host "searching for '$VendorReturnFailure'"
+$VendorReturn = Get-Content $SceLogFilePath  | Select-String $VendorReturnFailure  | Select-Object
+if ( $VendorReturn -ne $Null ) {
+    Write-output "SCE failed"
+    exit 146
+    }
+exit 9999
+# --------------------------------------------
+# --------------------------------------------
