@@ -9,5 +9,5 @@ These SCE files ( they contain CCTK.EXE and Config.INI) can get started with a d
  
 `<SCEExeFilePath`> /l=`<SCELogFilePath`>
 
-The SCE log files are returning with the ExitCode of the wrapper-Exe
-They are only partly returning the ExitCode of CCTK itself
+The SCE log files are returning the ExitCode of the Wrapper-Exe (the SCE itself).
+They are only partly (only sometimes)  returning the ExitCode of CCTK itself.
