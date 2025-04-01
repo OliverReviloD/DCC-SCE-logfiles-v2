@@ -7,7 +7,7 @@ Dell Command Configure
 Adminstrator may use 'Dell Command Configure Wizard' ( CCTK-GUI ) to create SCE (Self Containing Executables) files as a kind of Setup-Wrapper. 
 These SCE files ( they contain CCTK.EXE and Config.INI) can get started with a dedicated log file 
  
- <<SCEExeFilePath></SCEExeFilePath> /l=<SCELogFilePath>
+/</SCEExeFilePath> /l=/<SCELogFilePath>
 
 The SCE log files are returning with the ExitCode of the wrapper-Exe
 They are only partly returning the ExitCode of CCTK itself
