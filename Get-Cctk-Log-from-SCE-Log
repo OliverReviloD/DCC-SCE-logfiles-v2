@@ -20,7 +20,7 @@
 # 1) Run SCE-CCTK-Exe with dedicated log file paramter
 #      <SCEExeFilePath> /l=<SCELogFilePath>
 #
-# 2) powershell.exe -ExecutionPolicy ByPass -file "<ThisScript-Get-Cctk-Log-from-SCE-Log>.PS1" -SceLogFilePath <SCELogFilePath>
+# 2) powershell.exe -ExecutionPolicy ByPass -file "<ThisScript-Get-Cctk-Log-from-SCE-Log>.PS1" -SceLogFilePath <SCELogFilePath> -VendorLogOutPutFile C:\Dell\VendorLog.Txt
 #
 #
 # --------------------------------------------
