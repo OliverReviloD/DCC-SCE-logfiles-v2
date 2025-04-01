@@ -58,7 +58,7 @@ Function Write-SoftwareVentorLogInformation_to_File {
         # reduce empty and split lines
         $CurrentLine = $CurrentLine.trim()
 
-        # current logline is somehow split into two lines - rejoin to one line 
+        # some loglines maybe somehow split into two lines - rejoin to one line 
         
         # this block may require some improvements 
         if ( $CurrentLine.EndsWith("cctk -") )  {
