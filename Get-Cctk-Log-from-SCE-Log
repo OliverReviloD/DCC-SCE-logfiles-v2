@@ -1,0 +1,102 @@
+#####################################################################
+#####################################################################
+# Very basic :  grab all "Vendor Software Log" lines from SCE Log file 
+#               creates a new txt file 
+#
+#          --- Start of Vendor Software Log ---        
+#          [Mon Mar 24 15:50:33 2025]	ASCII payload log file detected.
+#          [Mon Mar 24 15:50:33 2025]	2025/03/24 15:50:33 cctk - CCTKAppEngVer=5.1.0.24
+#          2025/03/24 15:50:33 cctk - Applying the SCE using certificate-based authentication.
+#          2025/03/24 15:50:33 cctk - Add Provisioning failed!
+#          2025/03/24 15:50:33 cctk - Importing ini file is failing for some features. For more information, check log.
+#          CCTK STATUS CODE : FAILURE
+#          [Mon Mar 24 15:50:33 2025]
+#          --- End of Vendor Software Log ---
+#          [Mon Mar 24 15:50:33 2025]	Vendor Software Return Code: 146
+#
+#####################################################################
+#####################################################################
+#
+# 1) Run SCE-CCTK-Exe with dedicated log file paramter
+#      <SCEExeFilePath> /l=<SCELogFilePath>
+#
+# 2) powershell.exe -ExecutionPolicy ByPass -file "<ThisScript-Get-Cctk-Log-from-SCE-Log>.PS1" -SceLogFilePath <SCELogFilePath>
+#
+#
+# --------------------------------------------
+# --------------------------------------------
+# 3) PS1 source code   = <ThisScript-Get-Cctk-Log-from-SCE-Log>
+# --------------------------------------------
+Function Write-SoftwareVentorLogInformation_to_File {
+    [cmdletbinding()]
+    param ( [Parameter(Mandatory = $True)][string]$SceLogFilePath,
+            [Parameter(Mandatory = $True)][string]$VendorLogOutPutFile)
+
+    # search for block "..... Vendor Software Log"
+    
+    $FileContent = Get-Content $SceLogFilePath # -raw
+    $SearchStringStart = "--- Start of Vendor Software Log ---"
+    $StartLIne = Get-Content $SceLogFilePath  | Select-String $SearchStringStart  | Select-Object -ExpandProperty LineNumber
+
+    $SearchStringEnd   = "--- End of Vendor Software Log ---"
+    $EndLine = Get-Content $SceLogFilePath  | Select-String $SearchStringEnd  | Select-Object -ExpandProperty LineNumber
+
+    # --------------------------------------------
+    # "For-Each-SCE-Log-Line" 
+    #       between "--- Start of Vendor Software Log ---" 
+    #       and      "--- End of Vendor Software Log ---" 
+    # --------------------------------------------
+    [String]$CurrentLine = $Null
+    [String]$NextLine = $Null
+    $arrVendorBlockLines = @()
+    for ($i = $StartLIne -1 ; $i -le $EndLine; $i++)
+        {
+        $CurrentLine =  Get-Content $SceLogFilePath  | Select-Object -Index $i
+        if ( $i -eq $StartLIne -1 ) { $CurrentLine  = "`r`n$CurrentLine" }    # only optical effect, easier to read   a NEWLINE before
+        if ( $i -eq $EndLine      ) { $CurrentLine  = "$CurrentLine`r`n" }    # only optical effect, easier to read   a NEWLINE at the end   
+        
+        # reduce empty and split lines
+        $CurrentLine = $CurrentLine.trim()
+
+        # current logline is somehow split into two lines - rejoin to one line 
+        
+        # this block may require some improvements 
+        if ( $CurrentLine.EndsWith("cctk -") )  {
+            $NextLine = Get-Content $SceLogFilePath  | Select-Object -Index ($i +1)
+            if ( $NextLine.StartsWith("Option : ABI") ) 
+                {
+                $CurrentLine = $CurrentLine + " " + $NextLine 
+                $i++
+                }
+            }
+        if ( $CurrentLIne.Length -gt 0 ) {
+            $arrVendorBlockLines  +=   "          " + $CurrentLIne
+            }
+        }   # END of "For-Each-Line" ( between "--- Start of Vendor Software Log ---" and  "--- End of Vendor Software Log ---" )
+
+    # --------------------------------------------
+    # get ExitCode of CCTK
+    # --------------------------------------------
+    # Vendor Software Return Code:
+    $SearchStringVendorReturnCode = "Vendor Software Return Code:"
+    [String]$VendorReturnCode = Get-Content $SceLogFilePath  | Select-String $SearchStringVendorReturnCode # | Select-Object
+    $arrVendorBlockLines  +=   "          " + $VendorReturnCode
+    $sVendorBlockLines = $arrVendorBlockLines -join "`r`n" 
+    
+    # --------------------------------------------
+    #  write detected lines to a new file
+    # --------------------------------------------
+    set-content -Path  $VendorLogOutPutFile  -Value $sVendorBlockLines
+    # write-output $sVendorBlockLines | out-file  -encoding utf8  $VendorLogOutPutFile   #  -append
+    Write-Host "`r`n'$sVendorBlockLines'`r`n"    
+
+    # --------------------------------------------
+    #  set PS1 return code to CCTK ExitCode
+    # --------------------------------------------
+    $SplitResult = ($VendorReturnCode -Split ":") 
+    $VendorReturnCode = $SplitResult[$SplitResult.length - 1]
+    $VendorReturnCode = $VendorReturnCode.Trim()
+    Return $VendorReturnCode
+    }
+# --------------------------------------------
+# --------------------------------------------
